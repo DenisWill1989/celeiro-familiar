@@ -104,9 +104,10 @@
 
     <!-- Tabs Navigation -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex space-x-8 border-b border-hudBorder mt-2">
-            <button id="tabDashboard" onclick="switchTab('dashboard')" class="pb-3 px-1 text-sm font-mono font-bold tab-active transition-all">📊 DASHBOARD</button>
-            <button id="tabContas" onclick="switchTab('contas')" class="pb-3 px-1 text-sm font-mono font-bold tab-inactive transition-all">📋 CONTAS A PAGAR</button>
+        <div class="flex space-x-6 sm:space-x-8 border-b border-hudBorder mt-2 overflow-x-auto">
+            <button id="tabDashboard" onclick="switchTab('dashboard')" class="pb-3 px-1 text-xs sm:text-sm font-mono font-bold tab-active transition-all whitespace-nowrap">📊 DASHBOARD</button>
+            <button id="tabContas" onclick="switchTab('contas')" class="pb-3 px-1 text-xs sm:text-sm font-mono font-bold tab-inactive transition-all whitespace-nowrap">📋 CONTAS A PAGAR</button>
+            <button id="tabInvest" onclick="switchTab('invest')" class="pb-3 px-1 text-xs sm:text-sm font-mono font-bold tab-inactive transition-all whitespace-nowrap">💰 INVESTIMENTOS</button>
         </div>
     </div>
 
@@ -310,6 +311,221 @@
             </div>
         </div>
 
+        <!-- ===== CALCULADORA DE INVESTIMENTOS TAB ===== -->
+        <div id="investContent" class="hidden space-y-6">
+            
+            <!-- Resumo Investimentos -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="hudCard glass-hud p-5 rounded-3xl border border-emerald-500/20 shadow-green-glow">
+                    <p class="text-xs font-mono tracking-wider text-emerald-400 uppercase">Total Investido</p>
+                    <h3 id="investTotal" class="text-2xl font-mono font-bold mt-2 text-white">R$ 0,00</h3>
+                </div>
+                <div class="hudCard glass-hud p-5 rounded-3xl border border-[#00FFCC]/20 shadow-hud-glow">
+                    <p class="text-xs font-mono tracking-wider text-[#00FFCC] uppercase">Rendimento 12m</p>
+                    <h3 id="investReturn12" class="text-2xl font-mono font-bold mt-2 text-[#00FFCC]">R$ 0,00</h3>
+                </div>
+                <div class="hudCard glass-hud p-5 rounded-3xl border border-purple-500/20">
+                    <p class="text-xs font-mono tracking-wider text-purple-400 uppercase">Rendimento 24m</p>
+                    <h3 id="investReturn24" class="text-2xl font-mono font-bold mt-2 text-purple-400">R$ 0,00</h3>
+                </div>
+                <div class="hudCard glass-hud p-5 rounded-3xl border border-amber-500/20">
+                    <p class="text-xs font-mono tracking-wider text-amber-400 uppercase">Rendimento 48m</p>
+                    <h3 id="investReturn48" class="text-2xl font-mono font-bold mt-2 text-amber-400">R$ 0,00</h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Investimentos Pré-Definidos -->
+                <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-hudBorder shadow-xl">
+                    <h2 class="font-bold text-sm tracking-wide flex items-center space-x-2 font-mono mb-4">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span>INVESTIMENTOS PRÉ-DEFINIDOS</span>
+                    </h2>
+                    <p class="text-xs text-slate-400 font-mono mb-4">Selecione um investimento para calcular o rendimento automaticamente</p>
+                    
+                    <div class="space-y-3" id="predefinedInvestments">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div onclick="selectPredefined('Tesouro IPCA+','10.5')" class="cursor-pointer p-4 rounded-2xl bg-[#02060D] border border-hudBorder hover:border-emerald-500/50 hover:shadow-green-glow transition-all text-left group">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-lg">🏛️</div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-white group-hover:text-emerald-400 transition">Tesouro IPCA+</h4>
+                                        <p class="text-xs font-mono text-emerald-400">~10.5% a.a. + IPCA</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div onclick="selectPredefined('Tesouro Selic','14.0')" class="cursor-pointer p-4 rounded-2xl bg-[#02060D] border border-hudBorder hover:border-emerald-500/50 hover:shadow-green-glow transition-all text-left group">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-lg">🏛️</div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-white group-hover:text-emerald-400 transition">Tesouro Selic</h4>
+                                        <p class="text-xs font-mono text-emerald-400">~14.0% a.a.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div onclick="selectPredefined('CDB','12.5')" class="cursor-pointer p-4 rounded-2xl bg-[#02060D] border border-hudBorder hover:border-[#00FFCC]/50 hover:shadow-hud-glow transition-all text-left group">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-[#00FFCC]/10 border border-[#00FFCC]/30 flex items-center justify-center text-lg">🏦</div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-white group-hover:text-[#00FFCC] transition">CDB</h4>
+                                        <p class="text-xs font-mono text-[#00FFCC]">~12.5% a.a.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div onclick="selectPredefined('LCI/LCA','11.0')" class="cursor-pointer p-4 rounded-2xl bg-[#02060D] border border-hudBorder hover:border-[#00FFCC]/50 hover:shadow-hud-glow transition-all text-left group">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-[#00FFCC]/10 border border-[#00FFCC]/30 flex items-center justify-center text-lg">🏢</div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-white group-hover:text-[#00FFCC] transition">LCI / LCA</h4>
+                                        <p class="text-xs font-mono text-[#00FFCC]">~11.0% a.a. (Isento IR)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div onclick="selectPredefined('Ações (B3)','15.0')" class="cursor-pointer p-4 rounded-2xl bg-[#02060D] border border-hudBorder hover:border-purple-500/50 hover:shadow-rose-glow transition-all text-left group">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-lg">📈</div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-white group-hover:text-purple-400 transition">Ações (Ibov)</h4>
+                                        <p class="text-xs font-mono text-purple-400">~15.0% a.a. (histórico)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div onclick="selectPredefined('FII','12.0')" class="cursor-pointer p-4 rounded-2xl bg-[#02060D] border border-hudBorder hover:border-purple-500/50 hover:shadow-rose-glow transition-all text-left group">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-lg">🏠</div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-white group-hover:text-purple-400 transition">Fundos Imobiliários</h4>
+                                        <p class="text-xs font-mono text-purple-400">~12.0% a.a. (Isento IR)</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div onclick="selectPredefined('Renda Fixa Pós','13.5')" class="cursor-pointer p-4 rounded-2xl bg-[#02060D] border border-hudBorder hover:border-amber-500/50 transition-all text-left group">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-lg">💵</div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-white group-hover:text-amber-400 transition">Renda Fixa Pós-Fixada</h4>
+                                        <p class="text-xs font-mono text-amber-400">~13.5% a.a.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div onclick="selectPredefined('Crypto (BTC)','50.0')" class="cursor-pointer p-4 rounded-2xl bg-[#02060D] border border-hudBorder hover:border-amber-500/50 transition-all text-left group">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-lg">₿</div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-white group-hover:text-amber-400 transition">Bitcoin / Cripto</h4>
+                                        <p class="text-xs font-mono text-amber-400">~50.0% a.a. (volátil)</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulário de Cálculo -->
+                <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-hudBorder shadow-xl">
+                    <h2 class="font-bold text-sm tracking-wide flex items-center space-x-2 font-mono mb-4">
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span>CALCULAR RENDIMENTO</span>
+                    </h2>
+                    
+                    <form id="investForm" onsubmit="calculateInvestment(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">NOME DO INVESTIMENTO</label>
+                            <input type="text" id="investName" required placeholder="Ex: Tesouro IPCA+, CDB 12%, Minha Ação..." class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">VALOR INVESTIDO (R$)</label>
+                                <input type="number" step="0.01" id="investAmount" required placeholder="1000.00" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">TAXA AO ANO (%)</label>
+                                <input type="number" step="0.1" id="investRate" required placeholder="12.5" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">PERÍODO (MESES)</label>
+                                <input type="number" id="investMonths" required placeholder="12" value="12" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">TIPO DE IR</label>
+                                <select id="investIR" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                                    <option value="22.5">22.5% (até 6 meses)</option>
+                                    <option value="20.0">20.0% (6-12 meses)</option>
+                                    <option value="17.5">17.5% (12-24 meses)</option>
+                                    <option value="15.0" selected>15.0% (acima 24 meses)</option>
+                                    <option value="0">Isento (LCI/LCA/FII)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">APLICAÇÃO MENSAL (R$)</label>
+                                <input type="number" step="0.01" id="investMonthly" placeholder="0.00" value="0" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">BANCO / CORRETORA</label>
+                                <select id="investBank" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                                    <option value="Nubank">🟣 Nubank</option>
+                                    <option value="Inter">🟠 Inter</option>
+                                    <option value="XP">🔵 XP Investimentos</option>
+                                    <option value="Itaú">🟠 Itaú</option>
+                                    <option value="Outro">⚪ Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-[#00FFCC] hover:from-emerald-400 hover:to-[#00e6b8] text-slate-950 font-bold py-3.5 rounded-2xl transition shadow-hud-glow uppercase font-mono tracking-wider text-xs">Calcular Rendimento</button>
+                    </form>
+
+                    <!-- Resultado -->
+                    <div id="investResult" class="hidden mt-6 p-5 rounded-2xl bg-[#02060D] border border-[#00FFCC]/30 space-y-3">
+                        <h3 class="font-mono font-bold text-[#00FFCC] text-sm">📊 RESULTADO DA SIMULAÇÃO</h3>
+                        <div class="grid grid-cols-2 gap-4 text-xs font-mono">
+                            <div><span class="text-slate-400">Investimento:</span><br><span id="resName" class="text-white font-bold text-sm">-</span></div>
+                            <div><span class="text-slate-400">Valor Inicial:</span><br><span id="resInitial" class="text-white font-bold text-sm">R$ 0,00</span></div>
+                            <div><span class="text-slate-400">Total Investido:</span><br><span id="resTotalInvested" class="text-[#00FFCC] font-bold text-sm">R$ 0,00</span></div>
+                            <div><span class="text-slate-400">Taxa Anual:</span><br><span id="resRate" class="text-[#00FFCC] font-bold text-sm">0%</span></div>
+                            <div><span class="text-slate-400">Rendimento Bruto:</span><br><span id="resGross" class="text-emerald-400 font-bold text-sm">R$ 0,00</span></div>
+                            <div><span class="text-slate-400">Imposto de Renda:</span><br><span id="resTax" class="text-rose-400 font-bold text-sm">R$ 0,00</span></div>
+                            <div><span class="text-slate-400">Rendimento Líquido:</span><br><span id="resNet" class="text-emerald-400 font-bold text-sm">R$ 0,00</span></div>
+                            <div><span class="text-slate-400">Saldo Final Total:</span><br><span id="resFinal" class="text-white font-bold text-lg">R$ 0,00</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Investimentos Adicionados -->
+            <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-hudBorder shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-bold text-sm tracking-wide flex items-center space-x-2 font-mono">
+                        <span class="w-2 h-2 rounded-full bg-[#00FFCC] animate-pulse"></span>
+                        <span>MEUS INVESTIMENTOS</span>
+                    </h2>
+                    <span id="investCount" class="text-xs font-mono text-slate-400">0 investimentos</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-hudBorder text-xs font-mono text-slate-400">
+                                <th class="py-3 px-3">INVESTIMENTO</th>
+                                <th class="py-3 px-3">CORRETORA</th>
+                                <th class="py-3 px-3 text-right">INVESTIDO</th>
+                                <th class="py-3 px-3 text-right">TAXA</th>
+                                <th class="py-3 px-3 text-right">PRAZO</th>
+                                <th class="py-3 px-3 text-right">SALDO FINAL</th>
+                                <th class="py-3 px-3 text-center">LUCRO</th>
+                                <th class="py-3 px-3 text-center">DEL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="investTableBody" class="divide-y divide-hudBorder text-sm font-mono"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
     </main>
 
     <script>
@@ -368,13 +584,13 @@
             activeTab = tab;
             document.getElementById('dashboardContent').classList.add('hidden');
             document.getElementById('contasContent').classList.add('hidden');
-            document.getElementById('tabDashboard').className = 'pb-3 px-1 text-sm font-mono font-bold transition-all ' + (tab === 'dashboard' ? 'tab-active' : 'tab-inactive');
-            document.getElementById('tabContas').className = 'pb-3 px-1 text-sm font-mono font-bold transition-all ' + (tab === 'contas' ? 'tab-active' : 'tab-inactive');
-            if (tab === 'dashboard') {
-                document.getElementById('dashboardContent').classList.remove('hidden');
-            } else {
-                document.getElementById('contasContent').classList.remove('hidden');
-            }
+            document.getElementById('investContent').classList.add('hidden');
+            document.getElementById('tabDashboard').className = 'pb-3 px-1 text-xs sm:text-sm font-mono font-bold transition-all whitespace-nowrap ' + (tab === 'dashboard' ? 'tab-active' : 'tab-inactive');
+            document.getElementById('tabContas').className = 'pb-3 px-1 text-xs sm:text-sm font-mono font-bold transition-all whitespace-nowrap ' + (tab === 'contas' ? 'tab-active' : 'tab-inactive');
+            document.getElementById('tabInvest').className = 'pb-3 px-1 text-xs sm:text-sm font-mono font-bold transition-all whitespace-nowrap ' + (tab === 'invest' ? 'tab-active' : 'tab-inactive');
+            if (tab === 'dashboard') document.getElementById('dashboardContent').classList.remove('hidden');
+            else if (tab === 'contas') document.getElementById('contasContent').classList.remove('hidden');
+            else document.getElementById('investContent').classList.remove('hidden');
         }
 
         checkProfile();
@@ -501,8 +717,94 @@
 
         async function deleteBill(id) { if (confirm('Deseja excluir esta conta?')) { await fetch(`/api/bills/${id}`, { method: 'DELETE' }); loadBills(); } }
 
+        let investments = JSON.parse(localStorage.getItem('celeiro_investments') || '[]');
+
+        function saveInvestments() {
+            localStorage.setItem('celeiro_investments', JSON.stringify(investments));
+            renderInvestments();
+        }
+
+        function selectPredefined(name, rate) {
+            document.getElementById('investName').value = name;
+            document.getElementById('investRate').value = rate;
+            document.getElementById('investForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function calculateInvestment(e) {
+            e.preventDefault();
+            const name = document.getElementById('investName').value.trim();
+            const principal = parseFloat(document.getElementById('investAmount').value) || 0;
+            const annualRate = parseFloat(document.getElementById('investRate').value) || 0;
+            const months = parseInt(document.getElementById('investMonths').value) || 12;
+            const irRate = parseFloat(document.getElementById('investIR').value) || 0;
+            const monthly = parseFloat(document.getElementById('investMonthly').value) || 0;
+            const bank = document.getElementById('investBank').value;
+
+            const monthlyRate = annualRate / 100 / 12;
+            let balance = principal;
+            let totalInvested = principal;
+
+            for (let i = 0; i < months; i++) {
+                balance = balance * (1 + monthlyRate) + monthly;
+                totalInvested += monthly;
+            }
+
+            const grossReturn = balance - totalInvested;
+            const tax = grossReturn * (irRate / 100);
+            const netReturn = grossReturn - tax;
+            const finalBalance = totalInvested + netReturn;
+
+            document.getElementById('resName').innerText = name;
+            document.getElementById('resInitial').innerText = `R$ ${principal.toFixed(2)}`;
+            document.getElementById('resTotalInvested').innerText = `R$ ${totalInvested.toFixed(2)}`;
+            document.getElementById('resRate').innerText = `${annualRate}% a.a.`;
+            document.getElementById('resGross').innerText = `R$ ${grossReturn.toFixed(2)}`;
+            document.getElementById('resTax').innerText = irRate > 0 ? `R$ ${tax.toFixed(2)} (${irRate}%)` : 'Isento';
+            document.getElementById('resNet').innerText = `R$ ${netReturn.toFixed(2)}`;
+            document.getElementById('resFinal').innerText = `R$ ${finalBalance.toFixed(2)}`;
+            document.getElementById('investResult').classList.remove('hidden');
+
+            investments.push({ name, principal, annualRate, months, irRate, monthly, bank, finalBalance, netReturn, date: new Date().toLocaleDateString('pt-BR') });
+            saveInvestments();
+            updateInvestSummary();
+        }
+
+        function renderInvestments() {
+            const tbody = document.getElementById('investTableBody');
+            tbody.innerHTML = '';
+            document.getElementById('investCount').innerText = `${investments.length} investimentos`;
+            if (investments.length === 0) { tbody.innerHTML = `<tr><td colspan="8" class="text-center py-12 text-slate-500 font-mono">NENHUM INVESTIMENTO REGISTRADO.</td></tr>`; return; }
+            investments.forEach((inv, idx) => {
+                let bankBadge = '';
+                if (inv.bank === 'Nubank') bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-purple-500/10 text-purple-400 border border-purple-500/30">🟣 Nubank</span>';
+                else if (inv.bank === 'Inter') bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-orange-500/10 text-orange-400 border border-orange-500/30">🟠 Inter</span>';
+                else if (inv.bank === 'XP') bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-blue-500/10 text-blue-400 border border-blue-500/30">🔵 XP</span>';
+                else bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-slate-500/10 text-slate-400 border border-slate-500/30">⚪ ' + inv.bank + '</span>';
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition';
+                tr.innerHTML = `<td class="py-3 px-3 font-medium text-white">${inv.name}</td><td class="py-3 px-3">${bankBadge}</td><td class="py-3 px-3 text-right text-[#00FFCC]">R$ ${inv.principal.toFixed(2)}</td><td class="py-3 px-3 text-right text-slate-300">${inv.annualRate}% a.a.</td><td class="py-3 px-3 text-right text-slate-300">${inv.months}m</td><td class="py-3 px-3 text-right text-white font-bold">R$ ${inv.finalBalance.toFixed(2)}</td><td class="py-3 px-3 text-right text-emerald-400 font-bold">+R$ ${inv.netReturn.toFixed(2)}</td><td class="py-3 px-3 text-center"><button onclick="deleteInvestment(${idx})" class="text-slate-500 hover:text-rose-400 transition p-1">🗑️</button></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteInvestment(idx) { if (confirm('Remover este investimento?')) { investments.splice(idx, 1); saveInvestments(); updateInvestSummary(); } }
+
+        function updateInvestSummary() {
+            let totalInvested = investments.reduce((s, i) => s + i.principal, 0);
+            let totalReturn = investments.reduce((s, i) => s + i.netReturn, 0);
+            let return12 = investments.reduce((s, i) => s + (i.netReturn / i.months * 12), 0);
+            let return24 = investments.reduce((s, i) => s + (i.netReturn / i.months * 24), 0);
+            let return48 = investments.reduce((s, i) => s + (i.netReturn / i.months * 48), 0);
+            document.getElementById('investTotal').innerText = `R$ ${totalInvested.toFixed(2)}`;
+            document.getElementById('investReturn12').innerText = `R$ ${return12.toFixed(2)}`;
+            document.getElementById('investReturn24').innerText = `R$ ${return24.toFixed(2)}`;
+            document.getElementById('investReturn48').innerText = `R$ ${return48.toFixed(2)}`;
+        }
+
         loadData();
         loadBills();
+        renderInvestments();
+        updateInvestSummary();
     </script>
 </body>
 </html>
