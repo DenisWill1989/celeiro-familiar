@@ -10,8 +10,11 @@ app = FastAPI(title="Celeiro Familiar - Neural HUD Finance")
 
 DB_FILE = "finance.db"
 UPLOAD_DIR = "uploads"
+STATIC_DIR = "static"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(STATIC_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
@@ -45,6 +48,14 @@ def read_root():
 @app.get("/manifest.json")
 def get_manifest():
     return FileResponse("manifest.json")
+
+@app.get("/apple-touch-icon.png")
+def get_apple_icon():
+    return FileResponse("static/apple-touch-icon.png")
+
+@app.get("/favicon.ico")
+def get_favicon():
+    return FileResponse("static/icon-512.png")
 
 @app.get("/api/transactions")
 def get_transactions():

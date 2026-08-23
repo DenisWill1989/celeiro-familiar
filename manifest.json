@@ -3,11 +3,11 @@
   "short_name": "Celeiro",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#070B14",
-  "theme_color": "#070B14",
+  "background_color": "#02060D",
+  "theme_color": "#02060D",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+      "src": "/static/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
