@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Form, UploadFile, File
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
@@ -26,36 +26,19 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            description TEXT NOT NULL,
-            amount REAL NOT NULL,
-            type TEXT NOT NULL,
-            category TEXT NOT NULL,
-            user_name TEXT NOT NULL,
-            date TEXT NOT NULL,
-            bank TEXT NOT NULL,
-            receipt TEXT
-        )
-    ''')
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS bills (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            description TEXT NOT NULL,
-            amount REAL NOT NULL,
-            category TEXT NOT NULL,
-            user_name TEXT NOT NULL,
-            bank TEXT NOT NULL,
-            due_date TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'pending',
-            created_at TEXT NOT NULL
-        )
-    ''')
-    
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS transactions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        description TEXT, amount REAL, type TEXT,
+        category TEXT, user_name TEXT, date TEXT,
+        bank TEXT, receipt TEXT
+    )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS bills (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        description TEXT, amount REAL, category TEXT,
+        user_name TEXT, bank TEXT, due_date TEXT,
+        status TEXT DEFAULT 'pending', created_at TEXT
+    )''')
     conn.commit()
     conn.close()
 
@@ -63,36 +46,28 @@ init_db()
 
 @app.get("/", response_class=HTMLResponse)
 def read_root():
-    html_path = os.path.join("templates", "index.html")
-    if os.path.exists(html_path):
-        with open(html_path, "r", encoding="utf-8") as f:
-            return f.read()
-    return "<h1>Template não encontrado</h1>"
+    p = os.path.join("templates", "index.html")
+    return open(p, "r", encoding="utf-8").read() if os.path.exists(p) else "<h1>Erro</h1>"
 
 @app.get("/manifest.json")
-def get_manifest():
-    return FileResponse("manifest.json")
+def get_manifest(): return FileResponse("manifest.json")
 
 @app.get("/apple-touch-icon.png")
-def get_apple_icon():
-    return FileResponse("static/apple-touch-icon.png")
+def get_apple_icon(): return FileResponse("static/apple-touch-icon.png")
 
 @app.get("/favicon.ico")
-def get_favicon():
-    return FileResponse("static/icon-512.png")
+def get_favicon(): return FileResponse("static/icon-512.png")
+
+@app.get("/health")
+def health(): return {"status": "ok"}
 
 @app.get("/api/transactions")
 def get_transactions():
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM transactions ORDER BY date DESC, id DESC")
-        rows = cursor.fetchall()
-        conn.close()
-        return [dict(row) for row in rows]
-    except Exception:
-        return []
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("SELECT * FROM transactions ORDER BY date DESC, id DESC").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 @app.post("/api/transactions")
 async def create_transaction(
@@ -107,68 +82,51 @@ async def create_transaction(
 ):
     try:
         tx_date = date if date else datetime.now().strftime("%Y-%m-%d")
-        amount_float = float(amount) if amount else 0.0
+        try: amount_float = float(amount)
+        except: amount_float = 0.0
 
-        receipt_filename = None
-        if receipt and receipt.filename and receipt.filename.strip():
-            receipt_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{receipt.filename}"
-            file_path = os.path.join(UPLOAD_DIR, receipt_filename)
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(receipt.file, buffer)
-            receipt_filename = f"/uploads/{receipt_filename}"
+        receipt_path = None
+        if receipt and receipt.filename:
+            fname = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{receipt.filename}"
+            fpath = os.path.join(UPLOAD_DIR, fname)
+            with open(fpath, "wb") as f:
+                shutil.copyfileobj(receipt.file, f)
+            receipt_path = f"/uploads/{fname}"
 
         conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO transactions (description, amount, type, category, user_name, date, bank, receipt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (description, amount_float, type, category, user_name, tx_date, bank, receipt_filename)
+        conn.execute(
+            "INSERT INTO transactions (description, amount, type, category, user_name, date, bank, receipt) VALUES (?,?,?,?,?,?,?,?)",
+            (description, amount_float, type, category, user_name, tx_date, bank, receipt_path)
         )
         conn.commit()
-        tx_id = cursor.lastrowid
         conn.close()
-        return {"id": tx_id, "message": "Transação registrada com sucesso"}
+        return JSONResponse({"ok": True, "msg": "Registrado!"})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse({"ok": False, "msg": str(e)}, status_code=500)
 
 @app.delete("/api/transactions/{tx_id}")
 def delete_transaction(tx_id: int):
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM transactions WHERE id = ?", (tx_id,))
-        conn.commit()
-        conn.close()
-        return {"message": "Transação removida"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    conn = sqlite3.connect(DB_FILE)
+    conn.execute("DELETE FROM transactions WHERE id=?", (tx_id,))
+    conn.commit()
+    conn.close()
+    return {"ok": True}
 
 @app.get("/api/summary")
 def get_summary():
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute("SELECT SUM(amount) FROM transactions WHERE type = 'income'")
-        total_income = cursor.fetchone()[0] or 0.0
-        cursor.execute("SELECT SUM(amount) FROM transactions WHERE type = 'expense'")
-        total_expense = cursor.fetchone()[0] or 0.0
-        conn.close()
-        balance = total_income - total_expense
-        return {"total_income": total_income, "total_expense": total_expense, "balance": balance}
-    except Exception:
-        return {"total_income": 0.0, "total_expense": 0.0, "balance": 0.0}
+    conn = sqlite3.connect(DB_FILE)
+    inc = conn.execute("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE type='income'").fetchone()[0]
+    exp = conn.execute("SELECT COALESCE(SUM(amount),0) FROM transactions WHERE type='expense'").fetchone()[0]
+    conn.close()
+    return {"total_income": inc, "total_expense": exp, "balance": inc - exp}
 
 @app.get("/api/bills")
 def get_bills():
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM bills ORDER BY due_date ASC")
-        rows = cursor.fetchall()
-        conn.close()
-        return [dict(row) for row in rows]
-    except Exception:
-        return []
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute("SELECT * FROM bills WHERE status='pending' ORDER BY due_date ASC").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
 
 @app.post("/api/bills")
 async def create_bill(
@@ -180,75 +138,53 @@ async def create_bill(
     due_date: str = Form("")
 ):
     try:
-        amount_float = float(amount) if amount else 0.0
-        tx_date = due_date if due_date else datetime.now().strftime("%Y-%m-%d")
-        
+        try: amount_float = float(amount)
+        except: amount_float = 0.0
+        d = due_date if due_date else datetime.now().strftime("%Y-%m-%d")
         conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO bills (description, amount, category, user_name, bank, due_date, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (description, amount_float, category, user_name, bank, tx_date, "pending", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        conn.execute(
+            "INSERT INTO bills (description, amount, category, user_name, bank, due_date, status, created_at) VALUES (?,?,?,?,?,?,?,?)",
+            (description, amount_float, category, user_name, bank, d, "pending", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         )
         conn.commit()
-        bill_id = cursor.lastrowid
         conn.close()
-        return {"id": bill_id, "message": "Conta a pagar criada com sucesso"}
+        return JSONResponse({"ok": True, "msg": "Conta criada!"})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse({"ok": False, "msg": str(e)}, status_code=500)
 
 @app.put("/api/bills/{bill_id}/pay")
-async def pay_bill(bill_id: int):
+def pay_bill(bill_id: int):
     try:
         conn = sqlite3.connect(DB_FILE)
         conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT * FROM bills WHERE id = ?", (bill_id,))
-        bill = cursor.fetchone()
-        
+        bill = dict(conn.execute("SELECT * FROM bills WHERE id=?", (bill_id,)).fetchone())
         if not bill:
             conn.close()
-            raise HTTPException(status_code=404, detail="Conta não encontrada")
-        
-        bill = dict(bill)
-        
-        cursor.execute(
-            "INSERT INTO transactions (description, amount, type, category, user_name, date, bank, receipt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            return JSONResponse({"ok": False, "msg": "Conta não encontrada"}, status_code=404)
+
+        conn.execute(
+            "INSERT INTO transactions (description, amount, type, category, user_name, date, bank, receipt) VALUES (?,?,?,?,?,?,?,?)",
             (bill["description"], bill["amount"], "expense", bill["category"], bill["user_name"], datetime.now().strftime("%Y-%m-%d"), bill["bank"], None)
         )
-        
-        cursor.execute("UPDATE bills SET status = 'paid' WHERE id = ?", (bill_id,))
+        conn.execute("UPDATE bills SET status='paid' WHERE id=?", (bill_id,))
         conn.commit()
         conn.close()
-        
-        return {"message": "Conta paga e registrada como despesa automaticamente"}
-    except HTTPException:
-        raise
+        return JSONResponse({"ok": True, "msg": "Conta paga e registrada como despesa!"})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return JSONResponse({"ok": False, "msg": str(e)}, status_code=500)
 
 @app.delete("/api/bills/{bill_id}")
 def delete_bill(bill_id: int):
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM bills WHERE id = ?", (bill_id,))
-        conn.commit()
-        conn.close()
-        return {"message": "Conta removida"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    conn = sqlite3.connect(DB_FILE)
+    conn.execute("DELETE FROM bills WHERE id=?", (bill_id,))
+    conn.commit()
+    conn.close()
+    return {"ok": True}
 
 @app.get("/api/bills/summary")
 def get_bills_summary():
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        cursor = conn.cursor()
-        cursor.execute("SELECT SUM(amount) FROM bills WHERE status = 'pending'")
-        pending_total = cursor.fetchone()[0] or 0.0
-        cursor.execute("SELECT COUNT(*) FROM bills WHERE status = 'pending'")
-        pending_count = cursor.fetchone()[0] or 0
-        conn.close()
-        return {"pending_total": pending_total, "pending_count": pending_count}
-    except Exception:
-        return {"pending_total": 0.0, "pending_count": 0}
+    conn = sqlite3.connect(DB_FILE)
+    total = conn.execute("SELECT COALESCE(SUM(amount),0) FROM bills WHERE status='pending'").fetchone()[0]
+    count = conn.execute("SELECT COUNT(*) FROM bills WHERE status='pending'").fetchone()[0]
+    conn.close()
+    return {"pending_total": total, "pending_count": count}

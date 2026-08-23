@@ -412,9 +412,13 @@
 
         async function addTransaction(e) {
             e.preventDefault();
+            if (!currentUser) { alert('Selecione um perfil primeiro!'); return; }
+            const desc = document.getElementById('desc').value.trim();
+            const amt = document.getElementById('amount').value;
+            if (!desc || !amt) { alert('Preencha descrição e valor!'); return; }
             const formData = new FormData();
-            formData.append('description', document.getElementById('desc').value);
-            formData.append('amount', document.getElementById('amount').value);
+            formData.append('description', desc);
+            formData.append('amount', amt);
             formData.append('type', document.getElementById('type').value);
             formData.append('category', document.getElementById('category').value);
             formData.append('user_name', currentUser);
@@ -422,8 +426,11 @@
             formData.append('date', document.getElementById('date').value);
             const receiptFile = document.getElementById('receipt').files[0];
             if (receiptFile) formData.append('receipt', receiptFile);
-            const res = await fetch('/api/transactions', { method: 'POST', body: formData });
-            if (res.ok) { document.getElementById('desc').value = ''; document.getElementById('amount').value = ''; document.getElementById('receipt').value = ''; loadData(); } else { alert('Erro ao registrar transação'); }
+            try {
+                const res = await fetch('/api/transactions', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.ok) { document.getElementById('desc').value = ''; document.getElementById('amount').value = ''; document.getElementById('receipt').value = ''; loadData(); alert('Transação registrada com sucesso! ✅'); } else { alert('Erro: ' + (data.msg || 'Falha ao registrar')); }
+            } catch(err) { alert('Erro de conexão: ' + err.message); }
         }
 
         async function deleteTx(id) { if (confirm('Deseja excluir este registro?')) { await fetch(`/api/transactions/${id}`, { method: 'DELETE' }); loadData(); } }
@@ -464,21 +471,31 @@
 
         async function addBill(e) {
             e.preventDefault();
+            if (!currentUser) { alert('Selecione um perfil primeiro!'); return; }
+            const desc = document.getElementById('billDesc').value.trim();
+            const amt = document.getElementById('billAmount').value;
+            if (!desc || !amt) { alert('Preencha descrição e valor!'); return; }
             const formData = new FormData();
-            formData.append('description', document.getElementById('billDesc').value);
-            formData.append('amount', document.getElementById('billAmount').value);
+            formData.append('description', desc);
+            formData.append('amount', amt);
             formData.append('category', document.getElementById('billCategory').value);
             formData.append('user_name', currentUser);
             formData.append('bank', document.getElementById('billBank').value);
             formData.append('due_date', document.getElementById('billDueDate').value);
-            const res = await fetch('/api/bills', { method: 'POST', body: formData });
-            if (res.ok) { document.getElementById('billDesc').value = ''; document.getElementById('billAmount').value = ''; loadBills(); } else { alert('Erro ao criar conta'); }
+            try {
+                const res = await fetch('/api/bills', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.ok) { document.getElementById('billDesc').value = ''; document.getElementById('billAmount').value = ''; loadBills(); alert('Conta a pagar criada com sucesso! ✅'); } else { alert('Erro: ' + (data.msg || 'Falha ao criar conta')); }
+            } catch(err) { alert('Erro de conexão: ' + err.message); }
         }
 
         async function payBill(id) {
             if (confirm('Confirmar pagamento? A conta será registrada automaticamente como despesa no Dashboard.')) {
-                const res = await fetch(`/api/bills/${id}/pay`, { method: 'PUT' });
-                if (res.ok) { loadBills(); loadData(); alert('Conta paga e registrada como despesa automaticamente! ✅'); } else { alert('Erro ao pagar conta'); }
+                try {
+                    const res = await fetch(`/api/bills/${id}/pay`, { method: 'PUT' });
+                    const data = await res.json();
+                    if (data.ok) { loadBills(); loadData(); alert('Conta paga e registrada como despesa automaticamente! ✅'); } else { alert('Erro: ' + (data.msg || 'Falha ao pagar')); }
+                } catch(err) { alert('Erro de conexão: ' + err.message); }
             }
         }
 
