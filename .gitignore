@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+finance.db
+uploads/
+preview.png
+preview_hud.png
+generate_icon.py
