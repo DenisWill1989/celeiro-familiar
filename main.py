@@ -1,13 +1,17 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, FileResponse
-from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
 import sqlite3
 import os
 from datetime import datetime
+import shutil
 
-app = FastAPI(title="Celeiro Familiar - Sistema Neural Financeiro")
+app = FastAPI(title="Celeiro Familiar - Neural HUD Finance")
 
 DB_FILE = "finance.db"
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
@@ -20,21 +24,15 @@ def init_db():
             type TEXT NOT NULL,
             category TEXT NOT NULL,
             user_name TEXT NOT NULL,
-            date TEXT NOT NULL
+            date TEXT NOT NULL,
+            bank TEXT NOT NULL,
+            receipt TEXT
         )
     ''')
     conn.commit()
     conn.close()
 
 init_db()
-
-class TransactionCreate(BaseModel):
-    description: str
-    amount: float
-    type: str
-    category: str
-    user_name: str
-    date: str = None
 
 @app.get("/", response_class=HTMLResponse)
 def read_root():
@@ -59,19 +57,39 @@ def get_transactions():
     return [dict(row) for row in rows]
 
 @app.post("/api/transactions")
-def create_transaction(tx: TransactionCreate):
-    if tx.type not in ["income", "expense"]:
+async def create_transaction(
+    description: str = Form(...),
+    amount: float = Form(...),
+    type: str = Form(...),
+    category: str = Form(...),
+    user_name: str = Form(...),
+    bank: str = Form(...),
+    date: str = Form(None),
+    receipt: UploadFile = File(None)
+):
+    if type not in ["income", "expense"]:
         raise HTTPException(status_code=400, detail="Tipo inválido")
-    if tx.user_name not in ["Denis William", "Nicole Santos"]:
+    if user_name not in ["Denis William", "Nicole Santos"]:
         raise HTTPException(status_code=400, detail="Usuário inválido")
+    if bank not in ["Nubank", "Uber Conta", "Santander"]:
+        raise HTTPException(status_code=400, detail="Banco inválido")
     
-    tx_date = tx.date if tx.date else datetime.now().strftime("%Y-%m-%d")
+    tx_date = date if date else datetime.now().strftime("%Y-%m-%d")
     
+    receipt_filename = None
+    if receipt and receipt.filename:
+        file_ext = os.path.splitext(receipt.filename)[1]
+        receipt_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{receipt.filename}"
+        file_path = os.path.join(UPLOAD_DIR, receipt_filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(receipt.file, buffer)
+        receipt_filename = f"/uploads/{receipt_filename}"
+
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO transactions (description, amount, type, category, user_name, date) VALUES (?, ?, ?, ?, ?, ?)",
-        (tx.description, tx.amount, tx.type, tx.category, tx.user_name, tx_date)
+        "INSERT INTO transactions (description, amount, type, category, user_name, date, bank, receipt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (description, amount, type, category, user_name, tx_date, bank, receipt_filename)
     )
     conn.commit()
     tx_id = cursor.lastrowid
@@ -82,6 +100,13 @@ def create_transaction(tx: TransactionCreate):
 def delete_transaction(tx_id: int):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
+    cursor.execute("SELECT receipt FROM transactions WHERE id = ?", (tx_id,))
+    row = cursor.fetchone()
+    if row and row[0]:
+        file_path = row[0].lstrip("/")
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            
     cursor.execute("DELETE FROM transactions WHERE id = ?", (tx_id,))
     conn.commit()
     conn.close()
