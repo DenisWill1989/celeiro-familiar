@@ -1,12 +1,20 @@
 from fastapi import FastAPI, HTTPException, Form, UploadFile, File
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 import sqlite3
 import os
 from datetime import datetime
 import shutil
 
 app = FastAPI(title="Celeiro Familiar - Neural HUD Finance")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 DB_FILE = "finance.db"
 UPLOAD_DIR = "uploads"
@@ -59,84 +67,82 @@ def get_favicon():
 
 @app.get("/api/transactions")
 def get_transactions():
-    conn = sqlite3.connect(DB_FILE)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM transactions ORDER BY date DESC, id DESC")
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(row) for row in rows]
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM transactions ORDER BY date DESC, id DESC")
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+    except Exception as e:
+        return []
 
 @app.post("/api/transactions")
 async def create_transaction(
-    description: str = Form(...),
-    amount: float = Form(...),
-    type: str = Form(...),
-    category: str = Form(...),
-    user_name: str = Form(...),
-    bank: str = Form(...),
-    date: str = Form(None),
+    description: str = Form(""),
+    amount: str = Form("0"),
+    type: str = Form("expense"),
+    category: str = Form("Outros"),
+    user_name: str = Form("Denis William"),
+    bank: str = Form("Nubank"),
+    date: str = Form(""),
     receipt: UploadFile = File(None)
 ):
-    if type not in ["income", "expense"]:
-        raise HTTPException(status_code=400, detail="Tipo inválido")
-    if user_name not in ["Denis William", "Nicole Santos"]:
-        raise HTTPException(status_code=400, detail="Usuário inválido")
-    if bank not in ["Nubank", "Uber Conta", "Santander"]:
-        raise HTTPException(status_code=400, detail="Banco inválido")
-    
-    tx_date = date if date else datetime.now().strftime("%Y-%m-%d")
-    
-    receipt_filename = None
-    if receipt and receipt.filename:
-        file_ext = os.path.splitext(receipt.filename)[1]
-        receipt_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{receipt.filename}"
-        file_path = os.path.join(UPLOAD_DIR, receipt_filename)
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(receipt.file, buffer)
-        receipt_filename = f"/uploads/{receipt_filename}"
+    try:
+        tx_date = date if date else datetime.now().strftime("%Y-%m-%d")
+        amount_float = float(amount) if amount else 0.0
 
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO transactions (description, amount, type, category, user_name, date, bank, receipt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-        (description, amount, type, category, user_name, tx_date, bank, receipt_filename)
-    )
-    conn.commit()
-    tx_id = cursor.lastrowid
-    conn.close()
-    return {"id": tx_id, "message": "Transação registrada com sucesso"}
+        receipt_filename = None
+        if receipt and receipt.filename and receipt.filename.strip():
+            receipt_filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{receipt.filename}"
+            file_path = os.path.join(UPLOAD_DIR, receipt_filename)
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(receipt.file, buffer)
+            receipt_filename = f"/uploads/{receipt_filename}"
+
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO transactions (description, amount, type, category, user_name, date, bank, receipt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (description, amount_float, type, category, user_name, tx_date, bank, receipt_filename)
+        )
+        conn.commit()
+        tx_id = cursor.lastrowid
+        conn.close()
+        return {"id": tx_id, "message": "Transação registrada com sucesso"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/api/transactions/{tx_id}")
 def delete_transaction(tx_id: int):
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT receipt FROM transactions WHERE id = ?", (tx_id,))
-    row = cursor.fetchone()
-    if row and row[0]:
-        file_path = row[0].lstrip("/")
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            
-    cursor.execute("DELETE FROM transactions WHERE id = ?", (tx_id,))
-    conn.commit()
-    conn.close()
-    return {"message": "Transação removida"}
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM transactions WHERE id = ?", (tx_id,))
+        conn.commit()
+        conn.close()
+        return {"message": "Transação removida"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/summary")
 def get_summary():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("SELECT SUM(amount) FROM transactions WHERE type = 'income'")
-    total_income = cursor.fetchone()[0] or 0.0
-    
-    cursor.execute("SELECT SUM(amount) FROM transactions WHERE type = 'expense'")
-    total_expense = cursor.fetchone()[0] or 0.0
-    
-    conn.close()
-    balance = total_income - total_expense
-    return {
-        "total_income": total_income,
-        "total_expense": total_expense,
-        "balance": balance
-    }
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        cursor.execute("SELECT SUM(amount) FROM transactions WHERE type = 'income'")
+        total_income = cursor.fetchone()[0] or 0.0
+        
+        cursor.execute("SELECT SUM(amount) FROM transactions WHERE type = 'expense'")
+        total_expense = cursor.fetchone()[0] or 0.0
+        
+        conn.close()
+        balance = total_income - total_expense
+        return {
+            "total_income": total_income,
+            "total_expense": total_expense,
+            "balance": balance
+        }
+    except Exception as e:
+        return {"total_income": 0.0, "total_expense": 0.0, "balance": 0.0}
