@@ -39,6 +39,15 @@ def init_db():
         user_name TEXT, bank TEXT, due_date TEXT,
         status TEXT DEFAULT 'pending', created_at TEXT
     )''')
+    # Migração: adicionar coluna bank se não existir
+    try:
+        c.execute("SELECT bank FROM transactions LIMIT 1")
+    except:
+        c.execute("ALTER TABLE transactions ADD COLUMN bank TEXT DEFAULT 'Nubank'")
+    try:
+        c.execute("SELECT receipt FROM transactions LIMIT 1")
+    except:
+        c.execute("ALTER TABLE transactions ADD COLUMN receipt TEXT")
     conn.commit()
     conn.close()
 

@@ -141,6 +141,24 @@
                             <span>REGISTRO MULTI-BANK</span>
                         </h2>
                     </div>
+
+                    <!-- Entrada por Voz -->
+                    <div class="mb-4 p-4 rounded-2xl bg-gradient-to-r from-[#00FFCC]/5 to-[#00F2FE]/5 border border-[#00FFCC]/20">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-xs font-mono text-[#00FFCC] font-bold">🎤 ENTRADA POR VOZ</h3>
+                            <span id="voiceStatus" class="text-[10px] font-mono text-slate-500">Pronto para ouvir</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mb-3 font-mono">Diga algo como: <span class="text-[#00FFCC]">"Aluguel mil e quinhentos despesa nubank"</span> ou <span class="text-emerald-400">"Salário cinco mil receita"</span></p>
+                        <div class="flex items-center space-x-3">
+                            <button type="button" id="voiceBtn" onclick="startVoiceInput()" class="flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00FFCC] to-[#00F2FE] text-slate-950 font-bold text-2xl hover:scale-105 active:scale-95 transition shadow-hud-glow flex items-center justify-center">
+                                🎙️
+                            </button>
+                            <div class="flex-1">
+                                <div id="voiceText" class="text-sm text-slate-300 font-mono min-h-[24px]">Aguardando voz...</div>
+                                <div id="voiceParsed" class="text-[11px] text-[#00FFCC] font-mono mt-1 hidden"></div>
+                            </div>
+                        </div>
+                    </div>
                     <form id="txForm" onsubmit="addTransaction(event)" class="space-y-4" enctype="multipart/form-data">
                         <div>
                             <label class="block text-xs font-mono text-slate-400 mb-1">DESCRIÇÃO</label>
@@ -578,6 +596,168 @@
             }
             if(selectEl) selectEl.value = currentUser;
             if(billSelectEl) billSelectEl.value = currentUser;
+        }
+
+        // === VOICE RECOGNITION ===
+        let recognition = null;
+        let isListening = false;
+
+        function startVoiceInput() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                alert('Seu navegador não suporta entrada por voz. Use o Safari no iPhone ou Chrome.');
+                return;
+            }
+
+            if (isListening) {
+                recognition.stop();
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+            recognition.interimResults = true;
+
+            const voiceBtn = document.getElementById('voiceBtn');
+            const voiceStatus = document.getElementById('voiceStatus');
+            const voiceText = document.getElementById('voiceText');
+            const voiceParsed = document.getElementById('voiceParsed');
+
+            voiceBtn.classList.add('animate-pulse');
+            voiceStatus.innerText = '🔴 Ouvindo...';
+            voiceStatus.className = 'text-[10px] font-mono text-rose-400';
+            voiceText.innerText = 'Fale agora...';
+            isListening = true;
+
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                voiceText.innerText = transcript;
+
+                if (event.results[event.resultIndex].isFinal) {
+                    parseVoiceInput(transcript.toLowerCase());
+                }
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                voiceBtn.classList.remove('animate-pulse');
+                voiceStatus.innerText = 'Pronto para ouvir';
+                voiceStatus.className = 'text-[10px] font-mono text-slate-500';
+            };
+
+            recognition.onerror = (event) => {
+                isListening = false;
+                voiceBtn.classList.remove('animate-pulse');
+                voiceStatus.innerText = 'Erro: ' + event.error;
+                voiceStatus.className = 'text-[10px] font-mono text-rose-400';
+            };
+
+            recognition.start();
+        }
+
+        function parseVoiceInput(text) {
+            const voiceParsed = document.getElementById('voiceParsed');
+            voiceParsed.classList.remove('hidden');
+
+            // Detectar tipo
+            let type = 'expense';
+            if (text.includes('receita') || text.includes('salário') || text.includes('salario') || text.includes('ganho') || text.includes('entrou') || text.includes('freelancer')) {
+                type = 'income';
+            }
+            document.getElementById('type').value = type;
+
+            // Detectar banco
+            let bank = 'Nubank';
+            if (text.includes('nubank') || text.includes('nu bank')) bank = 'Nubank';
+            else if (text.includes('uber') || text.includes('uberconta')) bank = 'Uber Conta';
+            else if (text.includes('santander') || text.includes('santander')) bank = 'Santander';
+            document.getElementById('bank').value = bank;
+
+            // Detectar categoria
+            let category = 'Outros';
+            if (text.includes('aluguel') || text.includes('condomínio') || text.includes('condominio') || text.includes('luz') || text.includes('água') || text.includes('agua') || text.includes('conta de')) category = 'Moradia';
+            else if (text.includes('supermercado') || text.includes('mercado') || text.includes('comida') || text.includes('alimentação') || text.includes('alimentacao') || text.includes('feira') || text.includes('restaurante') || text.includes('ifood')) category = 'Alimentação';
+            else if (text.includes('uber') || text.includes('gasolina') || text.includes('combustível') || text.includes('combustivel') || text.includes('transporte') || text.includes('99')) category = 'Transporte';
+            else if (text.includes('farmácia') || text.includes('farmacia') || text.includes('remédio') || text.includes('remedio') || text.includes('médico') || text.includes('medico') || text.includes('saúde') || text.includes('saude')) category = 'Saúde';
+            else if (text.includes('lazer') || text.includes('cinema') || text.includes('netflix') || text.includes('spotify') || text.includes('jogo') || text.includes('bar')) category = 'Lazer';
+            else if (text.includes('salário') || text.includes('salario') || text.includes('freelancer') || text.includes('freela')) category = 'Outros';
+            document.getElementById('category').value = category;
+
+            // Extrair valor (por extenso ou número)
+            let amount = 0;
+            const numberWords = {
+                'um': 1, 'uma': 1, 'dois': 2, 'duas': 2, 'três': 3, 'tres': 3, 'quatro': 4, 'cinco': 5,
+                'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10, 'onze': 11, 'doze': 12,
+                'treze': 13, 'quatorze': 14, 'quinze': 15, 'dezesseis': 16, 'dezessete': 17,
+                'dezoito': 18, 'dezenove': 19, 'vinte': 20, 'trinta': 30, 'quarenta': 40,
+                'cinquenta': 50, 'sessenta': 60, 'setenta': 70, 'oitenta': 80, 'noventa': 90,
+                'cem': 100, 'cento': 100, 'duzentos': 200, 'trezentos': 300, 'quatrocentos': 400,
+                'quinhentos': 500, 'seiscentos': 600, 'setecentos': 700, 'oitocentos': 800,
+                'novecentos': 900, 'mil': 1000, 'milhão': 1000000, 'milhao': 1000000,
+                'milhões': 1000000, 'milhoes': 1000000
+            };
+
+            // Tentar extrair número direto
+            const numMatch = text.match(/(\d+[\.,]?\d*)/);
+            if (numMatch) {
+                amount = parseFloat(numMatch[1].replace(',', '.'));
+            }
+
+            // Se não achou número, tentar por extenso
+            if (amount === 0) {
+                let words = text.replace(/[^\w\s]/g, '').split(/\s+/);
+                let current = 0;
+                let total = 0;
+
+                for (let word of words) {
+                    if (numberWords[word] !== undefined) {
+                        let val = numberWords[word];
+                        if (val === 1000) {
+                            current = current === 0 ? 1000 : current * 1000;
+                        } else if (val >= 1000000) {
+                            current = current === 0 ? val : current * val;
+                        } else if (val >= 100) {
+                            current += val;
+                        } else {
+                            current += val;
+                        }
+                    } else if (word === 'e') {
+                        continue;
+                    }
+                }
+                total = current;
+                if (total > 0) amount = total;
+            }
+
+            if (amount > 0) {
+                document.getElementById('amount').value = amount.toFixed(2);
+            }
+
+            // Montar descrição limpa
+            let desc = text
+                .replace(/(receita|despesa|nubank|uber\s?conta|santander|aluguel|supermercado|mercado|salário|salario|freelancer|freela)/gi, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+            if (desc.length > 3) {
+                desc = desc.charAt(0).toUpperCase() + desc.slice(1);
+            } else {
+                desc = type === 'income' ? 'Receita' : 'Despesa';
+            }
+            document.getElementById('desc').value = desc;
+
+            // Feedback visual
+            const typeLabel = type === 'income' ? '📈 RECEITA' : '📉 DESPESA';
+            voiceParsed.innerHTML = `<span class="text-emerald-400">✓ Detectado:</span> ${typeLabel} | R$ ${amount.toFixed(2)} | ${category} | ${bank}`;
+            voiceParsed.classList.add('hidden');
+
+            setTimeout(() => {
+                voiceParsed.classList.add('hidden');
+                document.getElementById('voiceText').innerText = 'Aguardando voz...';
+            }, 4000);
         }
 
         function switchTab(tab) {
