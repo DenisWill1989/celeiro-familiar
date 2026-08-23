@@ -4,15 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Celeiro Familiar - Neural HUD Finance</title>
-    <!-- PWA & Apple Meta Tags -->
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Celeiro">
     <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
     <link rel="icon" type="image/png" href="/static/icon-512.png">
-
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -33,56 +30,44 @@
                         'hud-cyan': '0 0 25px rgba(0, 242, 254, 0.15)',
                         'green-glow': '0 0 20px rgba(16, 185, 129, 0.15)',
                         'rose-glow': '0 0 20px rgba(244, 63, 94, 0.15)',
+                        'amber-glow': '0 0 20px rgba(245, 158, 11, 0.15)',
                     }
                 }
             }
         }
     </script>
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
         .glass-hud { background: rgba(7, 16, 30, 0.85); backdrop-filter: blur(20px); }
         .hud-grid { background-image: linear-gradient(to right, rgba(0, 255, 204, 0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 255, 204, 0.04) 1px, transparent 1px); background-size: 32px 32px; }
-        /* Sci-Fi HUD scanlines */
-        .scanlines { position: relative; }
-        .scanlines::before { content: " "; display: block; position: absolute; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%); background-size: 100% 4px; z-index: 30; pointer-events: none; opacity: 0.15; }
+        .tab-active { border-bottom: 2px solid #00FFCC; color: #00FFCC; }
+        .tab-inactive { border-bottom: 2px solid transparent; color: #94a3b8; }
+        .tab-inactive:hover { color: #cbd5e1; }
     </style>
 </head>
 <body class="bg-hudBg text-slate-100 min-h-screen hud-grid selection:bg-[#00FFCC] selection:text-black pb-12">
     
-    <!-- PROFILE SELECTOR MODAL (Sci-Fi HUD Portal) -->
+    <!-- PROFILE SELECTOR MODAL -->
     <div id="profileModal" class="fixed inset-0 z-50 bg-hudBg/95 backdrop-blur-2xl flex items-center justify-center p-4 transition-opacity duration-500">
         <div class="max-w-md w-full glass-hud p-8 rounded-3xl border border-[#00FFCC]/40 shadow-hud-glow text-center relative overflow-hidden">
-            <!-- Sci-fi HUD decorative circles -->
             <div class="absolute -top-24 -left-24 w-48 h-48 bg-[#00FFCC]/10 rounded-full blur-3xl pointer-events-none"></div>
             <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-[#00F2FE]/10 rounded-full blur-3xl pointer-events-none"></div>
-
-            <div class="inline-flex p-3 rounded-2xl bg-[#00FFCC]/10 border border-[#00FFCC]/30 text-[#00FFCC] font-mono text-xl font-bold mb-4 shadow-hud-glow">
-                ◉ HUD NEURAL ACCESS
-            </div>
+            <div class="inline-flex p-3 rounded-2xl bg-[#00FFCC]/10 border border-[#00FFCC]/30 text-[#00FFCC] font-mono text-xl font-bold mb-4 shadow-hud-glow">◉ HUD NEURAL ACCESS</div>
             <h2 class="text-2xl font-bold tracking-wider mb-2 text-white">IDENTIFICAÇÃO DE OPERADOR</h2>
             <p class="text-xs font-mono text-slate-400 mb-8">Selecione sua credencial neural no sistema familiar</p>
-
             <div class="grid grid-cols-1 gap-4">
-                <!-- Denis William -->
                 <button onclick="selectProfile('Denis William')" class="group relative flex items-center p-4 rounded-2xl bg-[#02060D] border border-[#00FFCC]/30 hover:border-[#00FFCC] hover:shadow-hud-glow transition-all duration-300 text-left">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-[#00FFCC]/20 to-[#00F2FE]/20 border border-[#00FFCC]/50 flex items-center justify-center text-2xl mr-4 group-hover:scale-105 transition">
-                        🛡️
-                    </div>
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-[#00FFCC]/20 to-[#00F2FE]/20 border border-[#00FFCC]/50 flex items-center justify-center text-2xl mr-4 group-hover:scale-105 transition">🛡️</div>
                     <div>
                         <h3 class="font-bold text-white group-hover:text-[#00FFCC] transition font-mono text-base">Denis William</h3>
                         <p class="text-xs font-mono text-[#00FFCC]/70">OPERADOR ARQUITETO</p>
                     </div>
                     <div class="ml-auto text-[#00FFCC] opacity-0 group-hover:opacity-100 transition font-mono text-sm">▶</div>
                 </button>
-
-                <!-- Nicole Santos -->
                 <button onclick="selectProfile('Nicole Santos')" class="group relative flex items-center p-4 rounded-2xl bg-[#02060D] border border-fuchsia-500/30 hover:border-fuchsia-400 hover:shadow-rose-glow transition-all duration-300 text-left">
-                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-fuchsia-500/20 to-purple-600/20 border border-fuchsia-500/50 flex items-center justify-center text-2xl mr-4 group-hover:scale-105 transition">
-                        🔮
-                    </div>
+                    <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-fuchsia-500/20 to-purple-600/20 border border-fuchsia-500/50 flex items-center justify-center text-2xl mr-4 group-hover:scale-105 transition">🔮</div>
                     <div>
                         <h3 class="font-bold text-white group-hover:text-fuchsia-400 transition font-mono text-base">Nicole Santos</h3>
                         <p class="text-xs font-mono text-fuchsia-400/70">OPERADORA ESTRATEGISTA</p>
@@ -90,14 +75,11 @@
                     <div class="ml-auto text-fuchsia-400 opacity-0 group-hover:opacity-100 transition font-mono text-sm">▶</div>
                 </button>
             </div>
-
-            <div class="mt-8 text-[11px] font-mono text-slate-500">
-                MIL-SPEC 256-BIT ENCRYPTION • MULTI-BANK SYNC
-            </div>
+            <div class="mt-8 text-[11px] font-mono text-slate-500">MIL-SPEC 256-BIT ENCRYPTION • MULTI-BANK SYNC</div>
         </div>
     </div>
 
-    <!-- Top Futuristic Header -->
+    <!-- Header -->
     <header class="glass-hud border-b border-hudBorder sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -110,154 +92,232 @@
                     <p class="text-[11px] text-slate-400 font-mono">HUD Multi-Bank Matrix</p>
                 </div>
             </div>
-            
             <div class="flex items-center space-x-3">
                 <div id="activeUserBadge" class="flex items-center space-x-2 bg-hudCard border border-[#00FFCC]/30 px-3 py-1.5 rounded-2xl text-xs font-mono shadow-hud-glow">
                     <span id="activeUserAvatar">🛡️</span>
                     <span id="activeUserName" class="text-[#00FFCC] font-bold">Denis William</span>
                 </div>
-                <button onclick="switchProfile()" class="px-3 py-1.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono border border-hudBorder transition">
-                    Trocar
-                </button>
+                <button onclick="switchProfile()" class="px-3 py-1.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-mono border border-hudBorder transition">Trocar</button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Tabs Navigation -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex space-x-8 border-b border-hudBorder mt-2">
+            <button id="tabDashboard" onclick="switchTab('dashboard')" class="pb-3 px-1 text-sm font-mono font-bold tab-active transition-all">📊 DASHBOARD</button>
+            <button id="tabContas" onclick="switchTab('contas')" class="pb-3 px-1 text-sm font-mono font-bold tab-inactive transition-all">📋 CONTAS A PAGAR</button>
+        </div>
+    </div>
+
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
-        <!-- Summary Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            <!-- Saldo -->
-            <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-[#00FFCC]/20 shadow-hud-glow relative overflow-hidden">
-                <div class="absolute -right-4 -bottom-4 text-[#00FFCC]/10 font-mono text-6xl font-bold">∑</div>
-                <p class="text-xs font-mono tracking-wider text-slate-400 uppercase">Saldo Consolidado HUD</p>
-                <h3 id="cardBalance" class="text-2xl sm:text-3xl font-mono font-bold mt-2 text-white">R$ 0,00</h3>
+        <!-- ===== DASHBOARD TAB ===== -->
+        <div id="dashboardContent">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-[#00FFCC]/20 shadow-hud-glow relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 text-[#00FFCC]/10 font-mono text-6xl font-bold">∑</div>
+                    <p class="text-xs font-mono tracking-wider text-slate-400 uppercase">Saldo Consolidado HUD</p>
+                    <h3 id="cardBalance" class="text-2xl sm:text-3xl font-mono font-bold mt-2 text-white">R$ 0,00</h3>
+                </div>
+                <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-emerald-500/20 shadow-green-glow relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 text-emerald-500/10 font-mono text-6xl font-bold">+</div>
+                    <p class="text-xs font-mono tracking-wider text-emerald-400 uppercase">Entradas Familiares</p>
+                    <h3 id="cardIncome" class="text-2xl sm:text-3xl font-mono font-bold mt-2 text-emerald-400">R$ 0,00</h3>
+                </div>
+                <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-rose-500/20 shadow-rose-glow relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 text-rose-500/10 font-mono text-6xl font-bold">-</div>
+                    <p class="text-xs font-mono tracking-wider text-rose-400 uppercase">Saídas e Despesas</p>
+                    <h3 id="cardExpense" class="text-2xl sm:text-3xl font-mono font-bold mt-2 text-rose-400">R$ 0,00</h3>
+                </div>
             </div>
-            <!-- Entradas -->
-            <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-emerald-500/20 shadow-green-glow relative overflow-hidden">
-                <div class="absolute -right-4 -bottom-4 text-emerald-500/10 font-mono text-6xl font-bold">+</div>
-                <p class="text-xs font-mono tracking-wider text-emerald-400 uppercase">Entradas Familiares</p>
-                <h3 id="cardIncome" class="text-2xl sm:text-3xl font-mono font-bold mt-2 text-emerald-400">R$ 0,00</h3>
-            </div>
-            <!-- Saídas -->
-            <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-rose-500/20 shadow-rose-glow relative overflow-hidden">
-                <div class="absolute -right-4 -bottom-4 text-rose-500/10 font-mono text-6xl font-bold">-</div>
-                <p class="text-xs font-mono tracking-wider text-rose-400 uppercase">Saídas e Despesas</p>
-                <h3 id="cardExpense" class="text-2xl sm:text-3xl font-mono font-bold mt-2 text-rose-400">R$ 0,00</h3>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+                <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-hudBorder shadow-xl">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-bold text-sm sm:text-base tracking-wide flex items-center space-x-2 font-mono">
+                            <span class="w-2 h-2 rounded-full bg-[#00FFCC] animate-pulse"></span>
+                            <span>REGISTRO MULTI-BANK</span>
+                        </h2>
+                    </div>
+                    <form id="txForm" onsubmit="addTransaction(event)" class="space-y-4" enctype="multipart/form-data">
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">DESCRIÇÃO</label>
+                            <input type="text" id="desc" required placeholder="Ex: Supermercado, Aluguel..." class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">VALOR (R$)</label>
+                                <input type="number" step="0.01" id="amount" required placeholder="0.00" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">TIPO</label>
+                                <select id="type" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                                    <option value="expense">Despesa (-)</option>
+                                    <option value="income">Receita (+)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">CATEGORIA</label>
+                                <select id="category" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                                    <option value="Alimentação">Alimentação</option>
+                                    <option value="Moradia">Moradia</option>
+                                    <option value="Transporte">Transporte</option>
+                                    <option value="Lazer">Lazer</option>
+                                    <option value="Saúde">Saúde</option>
+                                    <option value="Outros">Outros</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">BANCO / CONTA</label>
+                                <select id="bank" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono text-[#00FFCC] font-semibold">
+                                    <option value="Nubank">🟣 Nubank</option>
+                                    <option value="Uber Conta">⚫ Uber Conta</option>
+                                    <option value="Santander">🔴 Santander</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">RESPONSÁVEL</label>
+                                <select id="user_name" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono text-slate-300" disabled>
+                                    <option value="Denis William">Denis William</option>
+                                    <option value="Nicole Santos">Nicole Santos</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-slate-400 mb-1">DATA</label>
+                                <input type="date" id="date" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-slate-400 mb-1">ANEXAR COMPROVANTE</label>
+                            <input type="file" id="receipt" accept="image/*,.pdf" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-2.5 text-xs text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-mono file:bg-[#00FFCC]/10 file:text-[#00FFCC] hover:file:bg-[#00FFCC]/20 transition">
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-[#00FFCC] to-[#00F2FE] hover:from-[#00e6b8] hover:to-[#00dcf0] text-slate-950 font-bold py-3.5 rounded-2xl transition shadow-hud-glow uppercase font-mono tracking-wider text-xs">Registrar no HUD</button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-2 hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-hudBorder shadow-xl flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-bold text-sm sm:text-base tracking-wide flex items-center space-x-2 font-mono">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>FLUXO MULTI-BANK & COMPROVANTES</span>
+                        </h2>
+                        <span id="txCount" class="text-xs font-mono text-slate-400">0 registros</span>
+                    </div>
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-hudBorder text-xs font-mono text-slate-400">
+                                    <th class="py-3 px-3">DATA</th>
+                                    <th class="py-3 px-3">DESCRIÇÃO</th>
+                                    <th class="py-3 px-3">BANCO</th>
+                                    <th class="py-3 px-3">QUEM</th>
+                                    <th class="py-3 px-3 text-right">VALOR</th>
+                                    <th class="py-3 px-3 text-center">ANEXO</th>
+                                    <th class="py-3 px-3 text-center">DEL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="txTableBody" class="divide-y divide-hudBorder text-sm font-mono"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Action Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- Nova Transação Form -->
-            <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-hudBorder shadow-xl">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="font-bold text-sm sm:text-base tracking-wide flex items-center space-x-2 font-mono">
-                        <span class="w-2 h-2 rounded-full bg-[#00FFCC] animate-pulse"></span>
-                        <span>REGISTRO MULTI-BANK</span>
-                    </h2>
+        <!-- ===== CONTAS A PAGAR TAB ===== -->
+        <div id="contasContent" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6">
+                <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-amber-500/20 shadow-amber-glow relative overflow-hidden">
+                    <p class="text-xs font-mono tracking-wider text-amber-400 uppercase">Total a Pagar</p>
+                    <h3 id="billsPendingTotal" class="text-2xl sm:text-3xl font-mono font-bold mt-2 text-amber-400">R$ 0,00</h3>
+                    <p id="billsPendingCount" class="text-xs font-mono text-slate-400 mt-1">0 contas pendentes</p>
                 </div>
-                <form id="txForm" onsubmit="addTransaction(event)" class="space-y-4" enctype="multipart/form-data">
-                    <div>
-                        <label class="block text-xs font-mono text-slate-400 mb-1">DESCRIÇÃO</label>
-                        <input type="text" id="desc" required placeholder="Ex: Supermercado, Aluguel..." class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-hudBorder shadow-xl md:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="font-bold text-sm sm:text-base tracking-wide flex items-center space-x-2 font-mono">
+                            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                            <span>NOVA CONTA A PAGAR</span>
+                        </h2>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-mono text-slate-400 mb-1">VALOR (R$)</label>
-                            <input type="number" step="0.01" id="amount" required placeholder="0.00" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                    <form id="billForm" onsubmit="addBill(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                        <div class="sm:col-span-2">
+                            <input type="text" id="billDesc" required placeholder="Descrição (ex: Aluguel, Luz...)" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 transition font-mono">
                         </div>
                         <div>
-                            <label class="block text-xs font-mono text-slate-400 mb-1">TIPO</label>
-                            <select id="type" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
-                                <option value="expense">Despesa (-)</option>
-                                <option value="income">Receita (+)</option>
-                            </select>
+                            <input type="number" step="0.01" id="billAmount" required placeholder="Valor R$" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 transition font-mono">
                         </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-mono text-slate-400 mb-1">CATEGORIA</label>
-                            <select id="category" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
-                                <option value="Alimentação">Alimentação</option>
+                            <input type="date" id="billDueDate" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 transition font-mono">
+                        </div>
+                        <div>
+                            <select id="billCategory" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 transition font-mono">
                                 <option value="Moradia">Moradia</option>
+                                <option value="Alimentação">Alimentação</option>
                                 <option value="Transporte">Transporte</option>
-                                <option value="Lazer">Lazer</option>
                                 <option value="Saúde">Saúde</option>
+                                <option value="Lazer">Lazer</option>
                                 <option value="Outros">Outros</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-mono text-slate-400 mb-1">BANCO / CONTA</label>
-                            <select id="bank" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono text-[#00FFCC] font-semibold">
+                            <select id="billBank" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 transition font-mono text-amber-400 font-semibold">
                                 <option value="Nubank">🟣 Nubank</option>
                                 <option value="Uber Conta">⚫ Uber Conta</option>
                                 <option value="Santander">🔴 Santander</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-mono text-slate-400 mb-1">RESPONSÁVEL</label>
-                            <select id="user_name" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono text-slate-300" disabled>
+                            <select id="billUser" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-amber-400 transition font-mono" disabled>
                                 <option value="Denis William">Denis William</option>
                                 <option value="Nicole Santos">Nicole Santos</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-mono text-slate-400 mb-1">DATA</label>
-                            <input type="date" id="date" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-[#00FFCC] transition font-mono">
+                            <button type="submit" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold py-3 rounded-2xl transition uppercase font-mono tracking-wider text-xs">+ Adicionar</button>
                         </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-mono text-slate-400 mb-1">ANEXAR COMPROVANTE (FOTO/PDF)</label>
-                        <input type="file" id="receipt" accept="image/*,.pdf" class="w-full bg-[#02060D] border border-hudBorder rounded-2xl px-4 py-2.5 text-xs text-slate-400 file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-mono file:bg-[#00FFCC]/10 file:text-[#00FFCC] hover:file:bg-[#00FFCC]/20 transition">
-                    </div>
-                    <button type="submit" class="w-full bg-gradient-to-r from-[#00FFCC] to-[#00F2FE] hover:from-[#00e6b8] hover:to-[#00dcf0] text-slate-950 font-bold py-3.5 rounded-2xl transition shadow-hud-glow uppercase font-mono tracking-wider text-xs">
-                        Registrar no HUD
-                    </button>
-                </form>
+                    </form>
+                </div>
             </div>
 
-            <!-- Transactions List -->
-            <div class="lg:col-span-2 hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-hudBorder shadow-xl flex flex-col">
+            <div class="hudCard glass-hud p-5 sm:p-6 rounded-3xl border border-hudBorder shadow-xl">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-bold text-sm sm:text-base tracking-wide flex items-center space-x-2 font-mono">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span>FLUXO MULTI-BANK & COMPROVANTES</span>
+                        <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span>CONTAS PENDENTES</span>
                     </h2>
-                    <span id="txCount" class="text-xs font-mono text-slate-400">0 registros</span>
+                    <span id="billsCount" class="text-xs font-mono text-slate-400">0 contas</span>
                 </div>
-                <div class="overflow-x-auto flex-1">
+                <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-hudBorder text-xs font-mono text-slate-400">
-                                <th class="py-3 px-3">DATA</th>
+                                <th class="py-3 px-3">VENCIMENTO</th>
                                 <th class="py-3 px-3">DESCRIÇÃO</th>
+                                <th class="py-3 px-3">CATEGORIA</th>
                                 <th class="py-3 px-3">BANCO</th>
                                 <th class="py-3 px-3">QUEM</th>
                                 <th class="py-3 px-3 text-right">VALOR</th>
-                                <th class="py-3 px-3 text-center">ANEXO</th>
-                                <th class="py-3 px-3 text-center">DEL</th>
+                                <th class="py-3 px-3 text-center">AÇÕES</th>
                             </tr>
                         </thead>
-                        <tbody id="txTableBody" class="divide-y divide-hudBorder text-sm font-mono">
-                            <!-- Preenchido via JS -->
-                        </tbody>
+                        <tbody id="billsTableBody" class="divide-y divide-hudBorder text-sm font-mono"></tbody>
                     </table>
                 </div>
             </div>
-
         </div>
 
     </main>
 
     <script>
         document.getElementById('date').valueAsDate = new Date();
+        document.getElementById('billDueDate').valueAsDate = new Date();
 
         let currentUser = localStorage.getItem('celeiro_user');
+        let activeTab = 'dashboard';
 
         function checkProfile() {
             if (!currentUser) {
@@ -276,6 +336,7 @@
             setTimeout(() => document.getElementById('profileModal').style.display = 'none', 300);
             updateHeaderProfile();
             loadData();
+            loadBills();
         }
 
         function switchProfile() {
@@ -289,7 +350,7 @@
             const avatarSpan = document.getElementById('activeUserAvatar');
             const nameSpan = document.getElementById('activeUserName');
             const selectEl = document.getElementById('user_name');
-            
+            const billSelectEl = document.getElementById('billUser');
             if (currentUser === 'Denis William') {
                 avatarSpan.innerText = '🛡️';
                 nameSpan.innerText = 'Denis William';
@@ -300,74 +361,53 @@
                 nameSpan.className = 'text-fuchsia-300 font-bold';
             }
             if(selectEl) selectEl.value = currentUser;
+            if(billSelectEl) billSelectEl.value = currentUser;
+        }
+
+        function switchTab(tab) {
+            activeTab = tab;
+            document.getElementById('dashboardContent').classList.add('hidden');
+            document.getElementById('contasContent').classList.add('hidden');
+            document.getElementById('tabDashboard').className = 'pb-3 px-1 text-sm font-mono font-bold transition-all ' + (tab === 'dashboard' ? 'tab-active' : 'tab-inactive');
+            document.getElementById('tabContas').className = 'pb-3 px-1 text-sm font-mono font-bold transition-all ' + (tab === 'contas' ? 'tab-active' : 'tab-inactive');
+            if (tab === 'dashboard') {
+                document.getElementById('dashboardContent').classList.remove('hidden');
+            } else {
+                document.getElementById('contasContent').classList.remove('hidden');
+            }
         }
 
         checkProfile();
 
         async function loadData() {
             try {
-                const [summaryRes, txRes] = await Promise.all([
-                    fetch('/api/summary'),
-                    fetch('/api/transactions')
-                ]);
+                const [summaryRes, txRes] = await Promise.all([fetch('/api/summary'), fetch('/api/transactions')]);
                 const summary = await summaryRes.json();
                 const txs = await txRes.json();
-
                 document.getElementById('cardBalance').innerText = `R$ ${summary.balance.toFixed(2)}`;
                 document.getElementById('cardIncome').innerText = `R$ ${summary.total_income.toFixed(2)}`;
                 document.getElementById('cardExpense').innerText = `R$ ${summary.total_expense.toFixed(2)}`;
-
                 const tbody = document.getElementById('txTableBody');
                 tbody.innerHTML = '';
                 document.getElementById('txCount').innerText = `${txs.length} registros`;
-
-                if (txs.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-slate-500 font-mono">NENHUM REGISTRO NO HUD.</td></tr>`;
-                    return;
-                }
-
+                if (txs.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-slate-500 font-mono">NENHUM REGISTRO NO HUD.</td></tr>`; return; }
                 txs.forEach(tx => {
                     const isIncome = tx.type === 'income';
                     const amountFormatted = (isIncome ? '+ ' : '- ') + `R$ ${Math.abs(tx.amount).toFixed(2)}`;
                     const amountClass = isIncome ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
-                    
-                    const userBadge = tx.user_name === 'Denis William' 
-                        ? '<div class="flex items-center space-x-1.5"><span class="text-base">🛡️</span><span class="text-xs text-[#00FFCC] font-bold">Denis</span></div>'
-                        : '<div class="flex items-center space-x-1.5"><span class="text-base">🔮</span><span class="text-xs text-fuchsia-400 font-bold">Nicole</span></div>';
-
+                    const userBadge = tx.user_name === 'Denis William' ? '<div class="flex items-center space-x-1.5"><span class="text-base">🛡️</span><span class="text-xs text-[#00FFCC] font-bold">Denis</span></div>' : '<div class="flex items-center space-x-1.5"><span class="text-base">🔮</span><span class="text-xs text-fuchsia-400 font-bold">Nicole</span></div>';
                     let bankBadge = '';
-                    if (tx.bank === 'Nubank') {
-                        bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-purple-500/10 text-purple-400 border border-purple-500/30">🟣 Nubank</span>';
-                    } else if (tx.bank === 'Uber Conta') {
-                        bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">⚫ Uber</span>';
-                    } else {
-                        bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-rose-500/10 text-rose-400 border border-rose-500/30">🔴 Santander</span>';
-                    }
-
+                    if (tx.bank === 'Nubank') bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-purple-500/10 text-purple-400 border border-purple-500/30">🟣 Nubank</span>';
+                    else if (tx.bank === 'Uber Conta') bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">⚫ Uber</span>';
+                    else bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-rose-500/10 text-rose-400 border border-rose-500/30">🔴 Santander</span>';
                     let receiptBtn = '<span class="text-slate-600">-</span>';
-                    if (tx.receipt) {
-                        receiptBtn = `<a href="${tx.receipt}" target="_blank" class="px-2 py-1 rounded bg-[#00FFCC]/10 text-[#00FFCC] border border-[#00FFCC]/30 hover:bg-[#00FFCC]/20 text-xs transition">📎 Ver</a>`;
-                    }
-
+                    if (tx.receipt) receiptBtn = `<a href="${tx.receipt}" target="_blank" class="px-2 py-1 rounded bg-[#00FFCC]/10 text-[#00FFCC] border border-[#00FFCC]/30 hover:bg-[#00FFCC]/20 text-xs transition">📎 Ver</a>`;
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-800/40 transition';
-                    tr.innerHTML = `
-                        <td class="py-3 px-3 text-xs text-slate-400">${tx.date}</td>
-                        <td class="py-3 px-3 font-medium text-white">${tx.description}</td>
-                        <td class="py-3 px-3">${bankBadge}</td>
-                        <td class="py-3 px-3 text-xs">${userBadge}</td>
-                        <td class="py-3 px-3 text-right ${amountClass}">${amountFormatted}</td>
-                        <td class="py-3 px-3 text-center">${receiptBtn}</td>
-                        <td class="py-3 px-3 text-center">
-                            <button onclick="deleteTx(${tx.id})" class="text-slate-500 hover:text-rose-400 transition p-1">🗑️</button>
-                        </td>
-                    `;
+                    tr.innerHTML = `<td class="py-3 px-3 text-xs text-slate-400">${tx.date}</td><td class="py-3 px-3 font-medium text-white">${tx.description}</td><td class="py-3 px-3">${bankBadge}</td><td class="py-3 px-3 text-xs">${userBadge}</td><td class="py-3 px-3 text-right ${amountClass}">${amountFormatted}</td><td class="py-3 px-3 text-center">${receiptBtn}</td><td class="py-3 px-3 text-center"><button onclick="deleteTx(${tx.id})" class="text-slate-500 hover:text-rose-400 transition p-1">🗑️</button></td>`;
                     tbody.appendChild(tr);
                 });
-
-            } catch (err) {
-                console.error("Erro ao carregar dados:", err);
-            }
+            } catch (err) { console.error("Erro ao carregar dados:", err); }
         }
 
         async function addTransaction(e) {
@@ -380,35 +420,72 @@
             formData.append('user_name', currentUser);
             formData.append('bank', document.getElementById('bank').value);
             formData.append('date', document.getElementById('date').value);
-            
             const receiptFile = document.getElementById('receipt').files[0];
-            if (receiptFile) {
-                formData.append('receipt', receiptFile);
-            }
+            if (receiptFile) formData.append('receipt', receiptFile);
+            const res = await fetch('/api/transactions', { method: 'POST', body: formData });
+            if (res.ok) { document.getElementById('desc').value = ''; document.getElementById('amount').value = ''; document.getElementById('receipt').value = ''; loadData(); } else { alert('Erro ao registrar transação'); }
+        }
 
-            const res = await fetch('/api/transactions', {
-                method: 'POST',
-                body: formData
-            });
+        async function deleteTx(id) { if (confirm('Deseja excluir este registro?')) { await fetch(`/api/transactions/${id}`, { method: 'DELETE' }); loadData(); } }
 
-            if (res.ok) {
-                document.getElementById('desc').value = '';
-                document.getElementById('amount').value = '';
-                document.getElementById('receipt').value = '';
-                loadData();
-            } else {
-                alert('Erro ao registrar transação no HUD');
+        async function loadBills() {
+            try {
+                const [billsRes, summaryRes] = await Promise.all([fetch('/api/bills'), fetch('/api/bills/summary')]);
+                const bills = await billsRes.json();
+                const summary = await summaryRes.json();
+                document.getElementById('billsPendingTotal').innerText = `R$ ${summary.pending_total.toFixed(2)}`;
+                document.getElementById('billsPendingCount').innerText = `${summary.pending_count} contas pendentes`;
+                const tbody = document.getElementById('billsTableBody');
+                tbody.innerHTML = '';
+                const pendingBills = bills.filter(b => b.status === 'pending');
+                document.getElementById('billsCount').innerText = `${pendingBills.length} contas`;
+                if (pendingBills.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="text-center py-12 text-slate-500 font-mono">NENHUMA CONTA PENDENTE. TUDO PAGO! 🎉</td></tr>`; return; }
+                pendingBills.forEach(bill => {
+                    const today = new Date();
+                    const due = new Date(bill.due_date + 'T23:59:59');
+                    const diffDays = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+                    let statusBadge = '';
+                    if (diffDays < 0) statusBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-rose-500/20 text-rose-400 border border-rose-500/30 animate-pulse">⚠️ VENCIDA</span>';
+                    else if (diffDays === 0) statusBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse">⏰ HOJE</span>';
+                    else if (diffDays <= 3) statusBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-amber-500/10 text-amber-400 border border-amber-500/20">📅 ' + diffDays + ' dias</span>';
+                    else statusBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-slate-500/10 text-slate-400 border border-slate-500/20">📅 ' + diffDays + ' dias</span>';
+                    let bankBadge = '';
+                    if (bill.bank === 'Nubank') bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-purple-500/10 text-purple-400 border border-purple-500/30">🟣 Nubank</span>';
+                    else if (bill.bank === 'Uber Conta') bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">⚫ Uber</span>';
+                    else bankBadge = '<span class="px-2 py-0.5 rounded text-[11px] bg-rose-500/10 text-rose-400 border border-rose-500/30">🔴 Santander</span>';
+                    const userBadge = bill.user_name === 'Denis William' ? '<span class="text-xs text-[#00FFCC] font-bold">🛡️ Denis</span>' : '<span class="text-xs text-fuchsia-400 font-bold">🔮 Nicole</span>';
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/40 transition';
+                    tr.innerHTML = `<td class="py-3 px-3"><div class="text-xs text-slate-300">${bill.due_date}</div><div>${statusBadge}</div></td><td class="py-3 px-3 font-medium text-white">${bill.description}</td><td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-[11px] bg-[#02060D] border border-hudBorder text-slate-300">${bill.category}</span></td><td class="py-3 px-3">${bankBadge}</td><td class="py-3 px-3">${userBadge}</td><td class="py-3 px-3 text-right text-amber-400 font-bold">R$ ${bill.amount.toFixed(2)}</td><td class="py-3 px-3 text-center"><div class="flex items-center justify-center space-x-2"><button onclick="payBill(${bill.id})" class="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 text-xs font-mono font-bold transition">✅ PAGAR</button><button onclick="deleteBill(${bill.id})" class="text-slate-500 hover:text-rose-400 transition p-1">🗑️</button></div></td>`;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) { console.error("Erro ao carregar contas:", err); }
+        }
+
+        async function addBill(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('description', document.getElementById('billDesc').value);
+            formData.append('amount', document.getElementById('billAmount').value);
+            formData.append('category', document.getElementById('billCategory').value);
+            formData.append('user_name', currentUser);
+            formData.append('bank', document.getElementById('billBank').value);
+            formData.append('due_date', document.getElementById('billDueDate').value);
+            const res = await fetch('/api/bills', { method: 'POST', body: formData });
+            if (res.ok) { document.getElementById('billDesc').value = ''; document.getElementById('billAmount').value = ''; loadBills(); } else { alert('Erro ao criar conta'); }
+        }
+
+        async function payBill(id) {
+            if (confirm('Confirmar pagamento? A conta será registrada automaticamente como despesa no Dashboard.')) {
+                const res = await fetch(`/api/bills/${id}/pay`, { method: 'PUT' });
+                if (res.ok) { loadBills(); loadData(); alert('Conta paga e registrada como despesa automaticamente! ✅'); } else { alert('Erro ao pagar conta'); }
             }
         }
 
-        async function deleteTx(id) {
-            if (confirm('Deseja excluir este registro?')) {
-                await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
-                loadData();
-            }
-        }
+        async function deleteBill(id) { if (confirm('Deseja excluir esta conta?')) { await fetch(`/api/bills/${id}`, { method: 'DELETE' }); loadBills(); } }
 
         loadData();
+        loadBills();
     </script>
 </body>
 </html>
